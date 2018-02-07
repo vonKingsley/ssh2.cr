@@ -218,7 +218,7 @@ class SSH2::Channel < IO
     SessionError.check_error(@session, code)
   end
 
-  struct StreamIO < IO
+  class StreamIO < IO
 
     getter channel : Channel
     getter stream_id : Int32
