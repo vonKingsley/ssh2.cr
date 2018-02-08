@@ -17,7 +17,7 @@ module SSH2::SFTP
     end
 
     def rewind
-      seek(0)
+      self.seek(0)
     end
 
     def tell
