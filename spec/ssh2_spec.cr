@@ -38,6 +38,34 @@ describe SSH2 do
       end
     end
   end
+
+  it "scp_send_file with src only" do
+    File.write("/tmp/test.txt", "hello world")
+    connect_ssh do |session|
+      session.scp_send_file("/tmp/test.txt")
+      session.open_session do |ch|
+        ch.command("ls -l /tmp")
+        ch.gets_to_end.includes?("test.txt").should be_true
+      end
+    end
+  end
+
+  it "scp_send_file with src and dest" do
+    File.write("/tmp/test.txt", "hello world")
+    connect_ssh do |session|
+     session.open_session do |ch|
+       ch.command("mkdir ./test_dir")
+       ch.exit_status.should eq 0
+      end
+    end
+    connect_ssh do |session|
+      session.scp_send_file("/tmp/test.txt", "./test_dir/test.txt")
+      session.open_session do |ch|
+        ch.command("ls -l ./test_dir")
+        ch.gets_to_end.includes?("test.txt").should be_true
+      end
+    end
+  end
 end
 
 describe SSH2::KnownHosts do

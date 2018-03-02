@@ -299,13 +299,38 @@ class SSH2::Session
   end
 
   # Send a file from a local filesystem to the remote host via SCP.
-  def scp_send_file(path)
-    if LibC.stat(path, out stat) != 0
-      raise Errno.new("Unable to get stat for '#{path}'")
+  #
+  # **src** is the local path + filename to send
+  #
+  # **dest** is a path + filename to copy the file to on the destination server.
+  #
+  # If dest is missing then the path and filename of src is used as the destination.
+  #
+  # src only.  Both src and destination files will be "/tmp/tmpfile.txt"
+  #
+  # ```
+  # SSH2::Session.open("localhost.com", 22) do |session|
+  #   session.login("username", "password")
+  #   session.scp_send_file("/tmp/tmpfile.txt")
+  # end
+  # ```
+  # or copy the src file "/tmp/tmpfile.txt" to the destination file "./copy.txt"
+  #
+  # ```
+  # SSH2::Session.open("localhost.com", 22) do |session|
+  #   session.login("username", "password")
+  #   session.scp_send_file("/tmp/tmpfile.txt", "./copy.txt")
+  # end
+  # ```
+  #
+  def scp_send_file(src, dest = "")
+    if LibC.stat(src, out stat) != 0
+      raise Errno.new("Unable to get stat for '#{src}'")
     end
-    scp_send(path, (stat.st_mode & 0x3ff).to_i32, stat.st_size.to_u64,
+    dest = src if dest.empty?
+    scp_send(dest, (stat.st_mode & 0x3ff).to_i32, stat.st_size.to_u64,
              stat.st_mtimespec.tv_sec, stat.st_atimespec.tv_sec) do |ch|
-      File.open(path, "r") do |f|
+      File.open(src, "r") do |f|
         IO.copy(f, ch)
       end
     end
